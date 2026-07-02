@@ -14,6 +14,11 @@
 
 #include <stdio.h>
 
+/* Require the app-API version this app is written against. Compatible = same major,
+ * minor >= 1.0. If the core pinned in apps.yaml is incompatible, the build fails with
+ * a clear message (rather than a cryptic compile error). See docs/APP_API.md §11. */
+TASKMASTER_REQUIRE_API(1, 0);
+
 /* Right-hand hint bar: what the buttons do on this screen. Encoder rotation always
  * scrolls, so it isn't shown. "OPN"/"DON"/"MNU"/"RST"/"BAK"/"OK" render as glyphs;
  * any other <=3-char text shows as-is. */
