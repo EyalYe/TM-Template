@@ -35,14 +35,24 @@ Two ways — you don't need a toolchain if you use CI:
 
 ## Flash + update — local tools, nothing hosted
 
-The maintainer hosts nothing. Two small Python tools live in [`tools/`](tools):
+Nothing is hosted in the cloud. Two small Python tools live in [`tools/`](tools) — they
+only need `pip install esptool` (no ESP-IDF):
 
-- **First flash (USB):** `python tools/flash.py --port <PORT> --bin <merged.bin>`
-  — flashes over USB via `esptool`. *(coming in this template)*
-- **Updates (OTA over your LAN):** `python tools/ota_serve.py --bin <app.bin>` serves
-  the image from your machine; point the device's **`fw_url`** (Settings → Web config)
-  at `http://<your-machine>:8000/firmware.bin` and it self-updates over Wi-Fi.
-  *(coming in this template)*
+- **First flash (USB):**
+  ```
+  python tools/flash.py                    # flashes ./build (after idf.py build)
+  python tools/flash.py --bin firmware.bin # or a merged image from a Release
+  ```
+  Auto-detects the port. If the device won't connect, hold **BOOT**, tap **RESET**,
+  release **BOOT** (download mode), then retry.
+
+- **Updates (OTA over your LAN):**
+  ```
+  python tools/ota_serve.py                # serves ./build/<app>.bin over HTTP
+  ```
+  It prints a URL like `http://<your-machine>:8000/<app>.bin`. Point the device's
+  **`fw_url`** at it (Settings → Web config), then Settings → **Check update** — the
+  device downloads the new image over Wi-Fi and reboots into it. You host nothing.
 
 ## What the device does
 
