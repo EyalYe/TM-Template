@@ -25,6 +25,18 @@ Copy [`apps/app_skeleton`](apps/app_skeleton) to a new folder, rename it, and ad
 entry in `apps.yaml`. An app fills in a `device_app_t` (`init` / `on_event` / `render`
 / `exit`) and self-registers. Full contract: **[`docs/APP_API.md`](docs/APP_API.md)**.
 
+## Example apps
+
+Real, working apps built exactly this way — read them, or use one as a starting point:
+
+- **[TM-Pomodoro](https://github.com/EyalYe/TM-Pomodoro)** — a **full-screen graphical**
+  work/break timer (two shrinking circles, no hint bar). Shows raw LVGL drawing, the
+  live `tick_ms`, and long-press Select. *(pins core `v1.2.0`)*
+- **[TM-ToDo](https://github.com/EyalYe/TM-ToDo)** — **two apps sharing one library**,
+  pick one: Todoist (Cloud) or a LAN server (Local), both over a shared `todo_common`
+  (offline cache + write-replay). Shows a shared component + app selection in `apps.yaml`.
+- **`apps/app_skeleton`** (in this repo) — the minimal starting point.
+
 ## Build it
 
 Two ways — you don't need a toolchain if you use CI:
