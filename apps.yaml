@@ -2,7 +2,7 @@
 #  apps.yaml — your device's configuration. This is the ONLY file you edit.
 #
 #  It has two parts:
-#    core:  the TaskMaster-C3 OS — a SEALED dependency. Pin a version (branch/tag);
+#    core:  the TaskMaster-C3 OS — a SEALED dependency. Pin a version (a release tag);
 #           never fork or edit it. Everything the OS does is fixed and immutable.
 #    apps:  YOUR apps. Each is a self-registering component (this repo's apps/, or a
 #           git repo). Add one entry per app; that's all it takes.
@@ -13,7 +13,7 @@
 core:
   git: https://github.com/EyalYe/TaskMaster.git
   path: components/taskmaster_core
-  version: main          # pin a release tag for stability, e.g. v1.0.0
+  version: v1.2.1        # pin a release tag; bump it to adopt a newer core
 
 apps:
   # Your starter app (in this repo). Rename / copy the apps/app_skeleton folder to
@@ -21,9 +21,9 @@ apps:
   - name: app_skeleton
     path: apps/app_skeleton
 
-  # An external app pulled from its own repo (the device app is in the repo's app/
-  # subdir). This is all it takes to add a third-party app.
-  - name: tm_yapp
-    git: https://github.com/EyalYe/TM-YappCloud.git
-    path: app
-    version: main
+  # An app can also come from its own repo (device app in a subdir) — that's all it
+  # takes. See the worked examples: github.com/EyalYe/TM-Pomodoro and .../TM-ToDo.
+  # - name: my_app
+  #   git: https://github.com/you/my_app.git
+  #   path: app
+  #   version: main

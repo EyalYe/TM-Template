@@ -7,10 +7,10 @@ buttons). **Fork this repo** — it's your project. The OS (`taskmaster_core`) i
 ## The one file you edit: [`apps.yaml`](apps.yaml)
 
 ```yaml
-core:                                   # the sealed OS — pin a version, never edit it
-  git: git@github.com:EyalYe/TaskMaster.git
+core:                                   # the sealed OS — pin a release tag, never edit it
+  git: https://github.com/EyalYe/TaskMaster.git
   path: components/taskmaster_core
-  version: main
+  version: v1.2.1
 apps:                                   # YOUR apps
   - name: app_skeleton
     path: apps/app_skeleton
@@ -41,30 +41,36 @@ Real, working apps built exactly this way — read them, or use one as a startin
 
 Two ways — you don't need a toolchain if you use CI:
 
-- **CI (no toolchain):** push. **GitHub Actions** builds the firmware `.bin` and
-  attaches it to a **Release**. *(`.github/workflows/build.yml`)*
+- **CI (no toolchain):** push. **GitHub Actions** builds the firmware and attaches the
+  two `.bin` files (below) to the workflow **artifact / Release**. *(`.github/workflows/build.yml`)*
 - **Local:** with ESP-IDF installed, `idf.py set-target esp32c3 && idf.py build`.
+
+## The two firmware files (which is which)
+
+Every build — CI or local — produces **two** files. Use the right one for the job:
+
+| File | Use it for | Command |
+|---|---|---|
+| **`firmware-merged.bin`** | **First flash over USB** — the *whole* image (bootloader + partitions + app) | `python tools/flash.py --bin firmware-merged.bin` |
+| **`taskmaster_c3_app.bin`** | **OTA update over Wi-Fi** — the *app image only* | `python tools/ota_serve.py --bin taskmaster_c3_app.bin` |
+
+- **From CI:** download the artifact/Release — both files are in it.
+- **From a local build:** the files are under `build/`. You can skip `--bin` entirely — run
+  `python tools/flash.py` (auto-flashes the full `build/` output) or `python tools/ota_serve.py`
+  (auto-serves the app image). Only a *downloaded* file needs `--bin`.
 
 ## Flash + update — local tools, nothing hosted
 
-Nothing is hosted in the cloud. Two small Python tools live in [`tools/`](tools) — they
-only need `pip install esptool` (no ESP-IDF):
+Nothing is hosted in the cloud. The two Python tools in [`tools/`](tools) only need
+`pip install esptool` (no ESP-IDF):
 
-- **First flash (USB):**
-  ```
-  python tools/flash.py                    # flashes ./build (after idf.py build)
-  python tools/flash.py --bin firmware.bin # or a merged image from a Release
-  ```
-  Auto-detects the port. If the device won't connect, hold **BOOT**, tap **RESET**,
-  release **BOOT** (download mode), then retry.
-
-- **Updates (OTA over your LAN):**
-  ```
-  python tools/ota_serve.py                # serves ./build/<app>.bin over HTTP
-  ```
-  It prints a URL like `http://<your-machine>:8000/<app>.bin`. Point the device's
-  **`fw_url`** at it (Settings → Web config), then Settings → **Check update** — the
-  device downloads the new image over Wi-Fi and reboots into it. You host nothing.
+- **First flash (USB):** `python tools/flash.py --bin firmware-merged.bin` (or bare
+  `python tools/flash.py` for a local build). Auto-detects the port; if it won't connect,
+  hold **BOOT**, tap **RESET**, release **BOOT** (download mode), then retry.
+- **Updates (OTA over your LAN):** `python tools/ota_serve.py --bin taskmaster_c3_app.bin`
+  (or bare for a local build). It prints a URL; point the device's **`fw_url`** at it
+  (Settings → Web config), then Settings → **Check update** — the device downloads over
+  Wi-Fi and reboots into it. You host nothing.
 
 ## What the device does
 

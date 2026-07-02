@@ -82,6 +82,10 @@ need a mutex for your own state. Key rules:
   regardless of how far it got, because **Home can fire at any moment** (see §3).
 - **Render is on-demand**, not a frame loop: the platform calls `render()` after each input event and
   whenever platform status you display changes (see §5). Draw from your current state each time.
+- **Need a live-updating screen** (clock, countdown, animation)? Set `.tick_ms` in your `device_app_t`
+  (**app-API 1.1**) — the OS re-renders you every `tick_ms` ms while you're active. Compute time-based
+  state from a timestamp (`esp_timer_get_time()`), **not** a tick counter: the tick pauses while the
+  panel is blanked, so counting ticks would drift.
 
 ## 3. Input events (`on_event`)
 
@@ -89,7 +93,8 @@ need a mutex for your own state. Key rules:
 // input.h
 EV_ENCODER_CW, EV_ENCODER_CCW,   // knob rotation
 EV_ENCODER_CLICK,                // knob push
-EV_SELECT,                       // Select button
+EV_SELECT,                       // Select button (short press — delivered on release)
+EV_SELECT_LONG,                  // Select held ~0.7s (app-API 1.2); short press won't also fire
 // EV_HOME is OS-reserved — it returns to the Launcher and is NEVER delivered to your app.
 ```
 
@@ -240,15 +245,19 @@ default, so you never special-case "first run". Notes:
   could coincide with another id's hash, or two long ids could hash alike. If that ever happened, the
   two apps would share a namespace and could read/overwrite each other's keys. **Choosing a
   distinctive id makes this a non-issue.**
-- **`tmcfg` is reserved** for core device config (`nvs_config`); `app_store_open()` rejects it.
+- **The `tm` prefix is reserved** for core/platform (it owns the `tmcfg` device-config namespace) —
+  `app_store_open()` rejects any id starting with `tm`, so your data can never collide with Wi-Fi
+  creds/tokens/settings.
 - **Don't touch `nvs_config.h`** — that's core-owned device config (Wi-Fi creds, tokens, settings)
   that drives the setup form. `app_store` is your app-private tier (PLAN §9.3).
 - `app_store_erase_all(&store)` clears just your namespace (a per-app reset).
-- **Shared, finite store — be frugal.** All apps *and* device config share **one ~24 KB NVS pool**
-  with **no per-app reservation**: an app that stores nothing costs nothing, and there's no quota to
-  claim. Keep keys small and store **config/state**, not bulk data — logs, caches, and large blobs
-  belong in RAM or elsewhere. Because the pool is shared and unguarded today, a greedy app can crowd
-  out others (and even provisioning); per-app budget enforcement is a deferred item (PLAN §14 Phase 6).
+- **Shared, finite store — budgeted.** All apps *and* device config share **one ~24 KB NVS pool**, so
+  each namespace is capped to stop a runaway app from crowding out others (or provisioning): a single
+  value may be at most `APP_STORE_MAX_VALUE_BYTES` (8 KB), and once your namespace reaches
+  `APP_STORE_MAX_ENTRIES` (~320 entries, ~10 KB) used entries, **new keys are rejected**
+  (`ESP_ERR_NO_MEM`) — **updates to existing keys still succeed**, so re-saving a cache never breaks and
+  never loses data. Keep keys small and store **config/state**, not bulk data (logs and large caches
+  belong in RAM). `app_store_erase_key/all` frees space. Device info shows pool usage (`NVS: used/total`).
 
 Writes commit immediately, so prefer writing on real changes / in `exit()` rather than every frame
 (NVS is flash). `app_store` is for app-**internal** state. To get user-supplied config (a server URL,
