@@ -43,7 +43,9 @@ Two ways — you don't need a toolchain if you use CI:
 
 - **CI (no toolchain):** push. **GitHub Actions** builds the firmware and attaches the
   two `.bin` files (below) to the workflow **artifact / Release**. *(`.github/workflows/build.yml`)*
-- **Local:** with ESP-IDF installed, `idf.py set-target esp32c3 && idf.py build`.
+- **Local (one command):** with ESP-IDF activated, **`python tools/build.py`** — a **clean** build that
+  first wipes stale state (`build/`, cached deps, the old manifest) so nothing old lingers, then produces
+  both `.bin` files. Add `--flash` to flash over USB right after.
 
 ## The two firmware files (which is which)
 
